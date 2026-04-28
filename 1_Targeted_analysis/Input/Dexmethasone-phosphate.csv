@@ -1,0 +1,65 @@
+name,condition,time,metabolite,area
+Dexamethasone-phosphate,P.vulgatus,0,Dexamethasone,12302
+Dexamethasone-phosphate,P.vulgatus,0,Dexamethasone-phosphate,42209
+Dexamethasone-phosphate,P.vulgatus,0,Dexamethasone,8785
+Dexamethasone-phosphate,P.vulgatus,0,Dexamethasone-phosphate,41750
+Dexamethasone-phosphate,P.vulgatus,0,Dexamethasone,8244
+Dexamethasone-phosphate,P.vulgatus,0,Dexamethasone-phosphate,32784
+Dexamethasone-phosphate,P.vulgatus,0,Dexamethasone,13005
+Dexamethasone-phosphate,P.vulgatus,0,Dexamethasone-phosphate,57082
+Dexamethasone-phosphate,P.vulgatus,3,Dexamethasone,45881
+Dexamethasone-phosphate,P.vulgatus,3,Dexamethasone-phosphate,35442
+Dexamethasone-phosphate,P.vulgatus,3,Dexamethasone,44050
+Dexamethasone-phosphate,P.vulgatus,3,Dexamethasone-phosphate,33199
+Dexamethasone-phosphate,P.vulgatus,3,Dexamethasone,52284
+Dexamethasone-phosphate,P.vulgatus,3,Dexamethasone-phosphate,36257
+Dexamethasone-phosphate,P.vulgatus,3,Dexamethasone,49870
+Dexamethasone-phosphate,P.vulgatus,3,Dexamethasone-phosphate,45848
+Dexamethasone-phosphate,P.vulgatus,9,Dexamethasone,75019
+Dexamethasone-phosphate,P.vulgatus,9,Dexamethasone-phosphate,16657
+Dexamethasone-phosphate,P.vulgatus,9,Dexamethasone,68082
+Dexamethasone-phosphate,P.vulgatus,9,Dexamethasone-phosphate,13753
+Dexamethasone-phosphate,P.vulgatus,9,Dexamethasone,71890
+Dexamethasone-phosphate,P.vulgatus,9,Dexamethasone-phosphate,13475
+Dexamethasone-phosphate,P.vulgatus,9,Dexamethasone,65892
+Dexamethasone-phosphate,P.vulgatus,9,Dexamethasone-phosphate,17303
+Dexamethasone-phosphate,P.vulgatus,27,Dexamethasone,98973
+Dexamethasone-phosphate,P.vulgatus,27,Dexamethasone-phosphate,5208
+Dexamethasone-phosphate,P.vulgatus,27,Dexamethasone,92400
+Dexamethasone-phosphate,P.vulgatus,27,Dexamethasone-phosphate,5275
+Dexamethasone-phosphate,P.vulgatus,27,Dexamethasone,97069
+Dexamethasone-phosphate,P.vulgatus,27,Dexamethasone-phosphate,4303
+Dexamethasone-phosphate,P.vulgatus,27,Dexamethasone,115839
+Dexamethasone-phosphate,P.vulgatus,27,Dexamethasone-phosphate,6693
+Dexamethasone-phosphate,sterile control,0,Dexamethasone,1000
+Dexamethasone-phosphate,sterile control,0,Dexamethasone-phosphate,83160
+Dexamethasone-phosphate,sterile control,0,Dexamethasone,1000
+Dexamethasone-phosphate,sterile control,0,Dexamethasone-phosphate,70368
+Dexamethasone-phosphate,sterile control,0,Dexamethasone,1000
+Dexamethasone-phosphate,sterile control,0,Dexamethasone-phosphate,71903
+Dexamethasone-phosphate,sterile control,0,Dexamethasone,1000
+Dexamethasone-phosphate,sterile control,0,Dexamethasone-phosphate,75858
+Dexamethasone-phosphate,sterile control,3,Dexamethasone,1000
+Dexamethasone-phosphate,sterile control,3,Dexamethasone-phosphate,72402
+Dexamethasone-phosphate,sterile control,3,Dexamethasone,1000
+Dexamethasone-phosphate,sterile control,3,Dexamethasone-phosphate,70253
+Dexamethasone-phosphate,sterile control,3,Dexamethasone,1000
+Dexamethasone-phosphate,sterile control,3,Dexamethasone-phosphate,74214
+Dexamethasone-phosphate,sterile control,3,Dexamethasone,1000
+Dexamethasone-phosphate,sterile control,3,Dexamethasone-phosphate,70749
+Dexamethasone-phosphate,sterile control,9,Dexamethasone,1000
+Dexamethasone-phosphate,sterile control,9,Dexamethasone-phosphate,68406
+Dexamethasone-phosphate,sterile control,9,Dexamethasone,1000
+Dexamethasone-phosphate,sterile control,9,Dexamethasone-phosphate,65134
+Dexamethasone-phosphate,sterile control,9,Dexamethasone,1000
+Dexamethasone-phosphate,sterile control,9,Dexamethasone-phosphate,68853
+Dexamethasone-phosphate,sterile control,9,Dexamethasone,1000
+Dexamethasone-phosphate,sterile control,9,Dexamethasone-phosphate,68310
+Dexamethasone-phosphate,sterile control,27,Dexamethasone,1000
+Dexamethasone-phosphate,sterile control,27,Dexamethasone-phosphate,72516
+Dexamethasone-phosphate,sterile control,27,Dexamethasone,1000
+Dexamethasone-phosphate,sterile control,27,Dexamethasone-phosphate,68247
+Dexamethasone-phosphate,sterile control,27,Dexamethasone,1000
+Dexamethasone-phosphate,sterile control,27,Dexamethasone-phosphate,60697
+Dexamethasone-phosphate,sterile control,27,Dexamethasone,1000
+Dexamethasone-phosphate,sterile control,27,Dexamethasone-phosphate,70190
