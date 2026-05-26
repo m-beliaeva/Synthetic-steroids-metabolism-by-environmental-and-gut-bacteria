@@ -8,30 +8,30 @@ Scripts are organized to mirror the analytical workflow and corresponding data d
 
 Each numbered branch corresponds to a major analysis module in the pipeline:
 
-1_Targeted_analysis
+### 1_Targeted_analysis
 
   Targeted metabolomics workflow including input data processing, quantitative analysis, and figure generation for predefined metabolites.
 
-2_Untargeted_analysis
+### 2_Untargeted_analysis
 
   Feature discovery and annotation from untargeted LC–MS data. Organized by sample type (environmental vs gut bacteria) and treatment compounds.
 
-3_Differential_analysis_and_MSMS_lists
+### 3_Differential_analysis_and_MSMS_lists
 
   Statistical comparison of metabolite features across conditions and generation of MS/MS acquisition lists. Includes MetaboAnalyst outputs and strain-specific results.
 
-4_MSMS_library_analysis
+### 4_MSMS_library_analysis
 
   Construction and curation of MS/MS spectral libraries, including merged spectra, metabolite scoring, annotation workflows, and filtered MGF files.
 
-5_Sherbicidovorans_screen
+### 5_Sherbicidovorans_screen
 
   Dedicated screening pipeline for S. herbicidovorans, including processing scripts and visualization outputs.
 
-6_Cross-feeding
+### 6_Cross-feeding
 
   Analysis of metabolite exchange between bacterial strains, including input processing and visualization of cross-feeding interactions.
 
-7_Protein_mapping
+### 7_Protein_mapping
 
   Mapping of metabolite transformations to candidate proteins, including sequence data processing and result visualization.
