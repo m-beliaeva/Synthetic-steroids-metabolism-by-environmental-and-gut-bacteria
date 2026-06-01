@@ -14,7 +14,7 @@ Each numbered branch corresponds to a major analysis module in the pipeline:
 
 ### 2_Untargeted_analysis
 
-  Feature discovery and annotation from untargeted LC–MS data. Organized by sample type (environmental vs gut bacteria) and treatment compounds.
+  Script for analysis of untargeted LC–MS data with MZmine. Organized by sample type (environmental vs gut bacteria) and treatment compounds.
 
 ### 3_Differential_analysis_and_MSMS_lists
 
@@ -22,11 +22,11 @@ Each numbered branch corresponds to a major analysis module in the pipeline:
 
 ### 4_MSMS_library_analysis
 
-  Construction and curation of MS/MS spectral libraries, including merged spectra, metabolite scoring, annotation workflows, and filtered MGF files.
+  Construction and curation of MS/MS spectral libraries, including merged spectra, metabolite scoring, and filtered MGF files.
 
 ### 5_Sherbicidovorans_screen
 
-  Dedicated screening pipeline for S. herbicidovorans, including processing scripts and visualization outputs.
+  Dedicated screening of S. herbicidovorans, including processing scripts and visualization.
 
 ### 6_Cross-feeding
 
