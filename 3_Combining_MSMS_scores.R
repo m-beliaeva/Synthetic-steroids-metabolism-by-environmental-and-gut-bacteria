@@ -83,3 +83,37 @@ for (i in output_files) {
   
 }
 
+#### MSMS score full histograms ----
+file_dir <- paste0(wd_path, "/Metabolites_collection/3_Combined_scores/")
+files <- list.files(file_dir, pattern = "_msms_score\\.csv$", full.names = TRUE)
+df_all <- bind_rows(lapply(files, read.csv))
+
+df_all %>%
+  filter(F1_SCORE !=2) %>% 
+  ggplot(aes(x = F1_SCORE)) +
+  geom_histogram(binwidth = 0.01, fill = "#FFD700", color = "black") +
+  labs(title = "Histogram of F1_SCORE Values",
+       x = "F1_SCORE",
+       y = "Frequency") +
+  theme_minimal()
+
+ggsave(filename = paste0(wd_path, "/Metabolites_collection/3_Full_histogram_F1_scores.pdf"),
+       width = 6,
+       height = 3,
+       unit = "in",
+       dpi = 300)
+
+df_all %>%
+  filter(COSINE_SCORE !=2) %>% 
+  ggplot(aes(x = COSINE_SCORE)) +
+  geom_histogram(binwidth = 0.01, fill = "#FFD700", color = "black") +
+  labs(title = "Histogram of COSINE_SCORE Values",
+       x = "COSINE_SCORE",
+       y = "Frequency") +
+  theme_minimal()
+
+ggsave(filename = paste0(wd_path, "/Metabolites_collection/3_Full_histogram_cosine_scores.pdf"),
+       width = 6,
+       height = 3,
+       unit = "in",
+       dpi = 300)
