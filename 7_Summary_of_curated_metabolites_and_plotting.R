@@ -206,6 +206,23 @@ cosmic80_row <- tibble(
 
 summary_table <- bind_rows(summary_table, cosmic80_row)
 
+# Add total biotransformation number
+total <- tibble(
+  description = "Total biotransfomrations detected",
+  MSMS = metabolites %>%
+    filter(is.na(parent_match), identified_by == "MSMS") %>%
+    nrow(),
+  
+  manual_curation = metabolites %>%
+    filter(is.na(parent_match), identified_by == "manual_curation") %>%
+    nrow(),
+  
+  total = metabolites %>%
+    filter(is.na(parent_match), identified_by == "MSMS" | identified_by == "manual_curation") %>%
+    nrow())
+
+summary_table <- bind_rows(summary_table, total)
+
 write_csv(summary_table, paste0(wd_path, "/Metabolites_collection/7_Summary_of_unique_metabolites.csv"))
 
 #### BARPLOT METABOLITES PER STEROID ----
