@@ -223,6 +223,23 @@ total <- tibble(
 
 summary_table <- bind_rows(summary_table, total)
 
+# Add total biotransformation number with assigned reactions
+total_reactions <- tibble(
+  description = "Biotransfomrations with assigned reactions",
+  MSMS = metabolites %>%
+    filter(is.na(parent_match), !is.na(reaction), identified_by == "MSMS", ) %>%
+    nrow(),
+  
+  manual_curation = metabolites %>%
+    filter(is.na(parent_match), !is.na(reaction), identified_by == "manual_curation") %>%
+    nrow(),
+  
+  total = metabolites %>%
+    filter(is.na(parent_match), !is.na(reaction), identified_by == "MSMS" | identified_by == "manual_curation") %>%
+    nrow())
+
+summary_table <- bind_rows(summary_table, total_reactions)
+
 write_csv(summary_table, paste0(wd_path, "/Metabolites_collection/7_Summary_of_unique_metabolites.csv"))
 
 #### BARPLOT METABOLITES PER STEROID ----
