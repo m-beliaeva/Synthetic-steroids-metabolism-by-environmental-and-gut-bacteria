@@ -33,13 +33,14 @@ df %>%
                   ymax = mean_area + sd_area),
               alpha = 0.2, color = NA) +
   geom_line(linewidth = 1) +
+  geom_point() +
   scale_linetype_manual(values = c(
     "S.herbicidovorans" = "solid",
     "sterile control" = "dotted")) +
   scale_color_viridis_d(option = "D", begin = 0, end = 0.85) +
   scale_fill_viridis_d(option = "D", begin = 0, end = 0.85) +
   scale_y_continuous(labels = scientific_10, limits = c(0, NA)) +
-  facet_wrap(~ metabolite, nrow = 1, scales = "free_y") +
+  #facet_wrap(~ metabolite, nrow = 1, scales = "free_y") +
   theme_minimal(base_size = 14) +
   labs(
     x = "Time, h",
@@ -56,8 +57,8 @@ df %>%
     panel.border = element_rect(color = "black", fill = NA, linewidth = 1.5))
 
 ggsave(filename = paste0(wd_path, "/Plots/Sherbicidovorans.pdf"),
-       width = 24,
-       height = 3.75,
+       width = 10,
+       height = 4,
        unit = "in",
        dpi = 300,  
        device = cairo_pdf)
@@ -82,13 +83,14 @@ df %>%
                   ymax = mean_area + sd_area),
               alpha = 0.2, color = NA) +
   geom_line(linewidth = 1) +
+  geom_point() +
   scale_linetype_manual(values = c(
     "B.uniformis" = "solid",
     "sterile control" = "dotted")) +
   scale_color_viridis_d(option = "D", begin = 0, end = 0.85) +
   scale_fill_viridis_d(option = "D", begin = 0, end = 0.85) +
   scale_y_continuous(labels = scientific_10, limits = c(0, NA)) +
-  facet_wrap(~ metabolite, nrow = 1, scales = "free_y") +
+  #facet_wrap(~ metabolite, nrow = 1, scales = "free_y") +
   theme_minimal(base_size = 14) +
   labs(
     x = "Time, h",
@@ -105,7 +107,7 @@ df %>%
     panel.border = element_rect(color = "black", fill = NA, linewidth = 1.5))
 
 ggsave(filename = paste0(wd_path, "/Plots/Buniformis.pdf"),
-       width = 15,
+       width = 10,
        height = 4,
        units = "in",
        dpi = 300,
@@ -130,13 +132,14 @@ df %>%
                   ymax = mean_area + sd_area),
               alpha = 0.2, color = NA) +
   geom_line(linewidth = 1) +
+  geom_point() +
   scale_linetype_manual(values = c(
     "P.vulgatus" = "solid",
     "sterile control" = "dotted")) +
   scale_color_viridis_d(option = "D", begin = 0, end = 0.85) +
   scale_fill_viridis_d(option = "D", begin = 0, end = 0.85) +
   scale_y_continuous(labels = scientific_10, limits = c(0, NA)) +
-  facet_wrap(~ metabolite, nrow = 1, scales = "free_y") +
+  #facet_wrap(~ metabolite, nrow = 1, scales = "free_y") +
   theme_minimal(base_size = 14) +
   labs(
     x = "Time, h",
@@ -153,7 +156,7 @@ df %>%
     panel.border = element_rect(color = "black", fill = NA, linewidth = 1.5))
 
 ggsave(filename = paste0(wd_path, "/Plots/Pvulgatus.pdf"),
-       width = 15,
+       width = 10,
        height = 4,
        units = "in",
        dpi = 300,
@@ -163,7 +166,9 @@ ggsave(filename = paste0(wd_path, "/Plots/Pvulgatus.pdf"),
 df <- read_csv(paste0(wd_path, "/Input/Cscindens.csv")) %>% 
   rename('Drug' = name,
          'Condition' = condition) %>% 
-  group_by(Condition, time, metabolite) %>%
+  separate(col = metabolite, into = c("Compound"), sep = "-", remove = FALSE) %>% 
+  mutate(Compound = gsub("12", "12-Dihydro-dexamethasone", Compound)) %>% 
+  group_by(Condition, time, metabolite, Compound) %>%
   summarize(mean_area = mean(area),
             sd_area = sd(area), .groups = 'drop') %>% 
   mutate(type = ifelse(grepl("ketone", metabolite, ignore.case = TRUE),
@@ -181,6 +186,7 @@ df %>%
                   ymax = mean_area + sd_area),
               alpha = 0.2, color = NA) +
   geom_line(linewidth = 1) +
+  geom_point() +
   scale_linetype_manual(values = c(
     "C.scindens" = "solid",
     "sterile control" = "dotted")) +
@@ -193,7 +199,7 @@ df %>%
     y = "Peak Area",
     color = "Metabolite",
     linetype = "Sample") +
-  facet_wrap(~ metabolite, scales = "free_y", nrow = 5) +
+  facet_wrap(~ Compound, scales = "free_y", nrow = 5) +
   theme(
     axis.title.x = element_text(size = 20, face = "bold", color = "black"),
     axis.title.y = element_text(size = 20, face = "bold", color = "black"),
@@ -203,8 +209,8 @@ df %>%
     legend.text  = element_text(size = 24),
     panel.border = element_rect(color = "black", fill = NA, linewidth = 1.5))
 
-ggsave(filename = paste0(wd_path, "/Plots/Cscindens.pdf"),
-       width = 15,
+ggsave(filename = paste0(wd_path, "/Plots/Cscindens_v2.pdf"),
+       width = 10,
        height = 20,
        units = "in",
        dpi = 300,
