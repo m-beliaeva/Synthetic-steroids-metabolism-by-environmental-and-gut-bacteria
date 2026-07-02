@@ -124,6 +124,13 @@ summary_table <- bind_rows(
     "Biotransformations with assigned reaction",
     is.na(parent_match) & !is.na(reaction),
     paste(species, Compound, consensus_MZ_RT)),
+
+    # Biotransformations with intermediate or initial metabolites
+  count_by_id(
+    metabolites,
+    "Biotransformations with intermediate or initial metabolites",
+    is.na(parent_match) & str_detect(metabolite_type, "initial|intermediate"),
+    paste(species, Compound, consensus_MZ_RT)),
   
   # Unique metabolites related to compound (Unique Compound–MZ–RT)
   count_by_id(
