@@ -55,7 +55,7 @@ data_degr_long <- data_degr %>%
 # Get list of curated metabolites
 metabolites <- read_csv(paste0(wd_path, "/Metabolites_collection/6_Metabolites_filtered_with_reactions_curated.csv")) %>% 
   filter(is.na(parent_match)) %>% 
-  filter(metabolite_type != "in-source defluorination") # 167 curated non-unique metabolites detected excluding parent hits
+  filter(metabolite_type != "in-source defluorination") # 167 curated biotransformations detected excluding parent hits
 
 metabolites$Compound <- gsub("12-Dihydro-dexamethasone", "1,2-Dihydro-dexamethasone", metabolites$Compound)
 metabolites$Compound <- gsub("67-Dehydro-ethinylestradiol", "6,7-Dehydro-ethinylestradiol", metabolites$Compound)
@@ -63,7 +63,7 @@ metabolites$Compound <- gsub("67-Dehydro-ethynylestradiol", "6,7-Dehydro-ethinyl
 
 # Tolerance for MZ_RT consensus
 abs_mass = 0.001 # absolute mz tolerance
-rel_mass = 1*10^-6 # relative mz tolerance (10 ppm)
+rel_mass = 2*10^-6 # relative mz tolerance (20 ppm)
 abs_rt = 0.1 # absolute rt tolerance
 
 # Cluster metabolites based on MZ_RT combinations by tolerance
@@ -74,24 +74,30 @@ metabolites_clustered <- metabolites %>%
 cluster <- 1
 metabolites_clustered$cluster_id[1] <- cluster
 
+# Reference values for current cluster
+cluster_mz <- metabolites_clustered$MZ[1]
+cluster_rt <- metabolites_clustered$RT[1]
+
 for (i in 2:nrow(metabolites_clustered)) {
   
-  mz_prev <- metabolites_clustered$MZ[i - 1]
   mz_curr <- metabolites_clustered$MZ[i]
-  
-  rt_prev <- metabolites_clustered$RT[i - 1]
   rt_curr <- metabolites_clustered$RT[i]
   
-  mz_tol <- max(abs_mass, rel_mass * mz_prev)
+  mz_tol <- max(abs_mass, rel_mass * cluster_mz)
   
-  if (abs(mz_curr - mz_prev) <= mz_tol &&
-      abs(rt_curr - rt_prev) <= abs_rt) {
+  if (abs(mz_curr - cluster_mz) <= mz_tol &&
+      abs(rt_curr - cluster_rt) <= abs_rt) {
     
     metabolites_clustered$cluster_id[i] <- cluster
     
   } else {
+    
     cluster <- cluster + 1
     metabolites_clustered$cluster_id[i] <- cluster
+    
+    # Start new cluster
+    cluster_mz <- mz_curr
+    cluster_rt <- rt_curr
   }
 }
 
@@ -100,8 +106,7 @@ cluster_consensus <- metabolites_clustered %>%
   summarise(
     consensus_MZ = mean(MZ, na.rm = TRUE),
     consensus_RT = mean(RT, na.rm = TRUE),
-    .groups = "drop"
-  )
+    .groups = "drop")
 
 metabolites <- metabolites_clustered %>%
   left_join(cluster_consensus, by = "cluster_id") %>%
@@ -140,14 +145,21 @@ count_by_id <- function(df, desc, filter_expr, count_expr) {
 # Summary table 
 summary_table <- bind_rows(
   
-  # Unique metabolites (Compound–MZ–RT)
+  # Unique metabolites (MZ–RT)
   count_by_id(
     metabolites,
-    "Unique metabolites (Compound-MZ-RT)",
+    "Unique metabolites (Unique MZ-RT)",
+    is.na(parent_match),
+    paste(consensus_MZ_RT)),
+  
+  # Unique metabolites related to compound (Unique Compound–MZ–RT)
+  count_by_id(
+    metabolites,
+    "Unique metabolites related to compound (Unique Compound-MZ-RT)",
     is.na(parent_match),
     paste(Compound, consensus_MZ_RT)),
   
-  # Unique compounds
+  # Unique parent compounds
   count_by_id(
     metabolites,
     "Parent compounds",
