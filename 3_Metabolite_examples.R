@@ -57,8 +57,8 @@ df %>%
     panel.border = element_rect(color = "black", fill = NA, linewidth = 1.5))
 
 ggsave(filename = paste0(wd_path, "/Plots/Sherbicidovorans.pdf"),
-       width = 10,
-       height = 4,
+       width = 12,
+       height = 4.5,
        unit = "in",
        dpi = 300,  
        device = cairo_pdf)
@@ -107,8 +107,8 @@ df %>%
     panel.border = element_rect(color = "black", fill = NA, linewidth = 1.5))
 
 ggsave(filename = paste0(wd_path, "/Plots/Buniformis.pdf"),
-       width = 10,
-       height = 4,
+       width = 12,
+       height = 4.5,
        units = "in",
        dpi = 300,
        device = cairo_pdf)
@@ -156,8 +156,8 @@ df %>%
     panel.border = element_rect(color = "black", fill = NA, linewidth = 1.5))
 
 ggsave(filename = paste0(wd_path, "/Plots/Pvulgatus.pdf"),
-       width = 10,
-       height = 4,
+       width = 12,
+       height = 4.5,
        units = "in",
        dpi = 300,
        device = cairo_pdf)
