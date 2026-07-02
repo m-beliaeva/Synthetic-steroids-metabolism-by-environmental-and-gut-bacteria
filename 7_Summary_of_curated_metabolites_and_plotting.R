@@ -17,40 +17,6 @@ library(stringr)
 wd_path <- getwd()
 setwd(wd_path)
 
-#### PARENT DATA ----
-data_degr <- read_csv(paste0(dirname(wd_path), "/1_Targeted_analysis/Output/Steroid_degradation_statistics.csv"))
-data_degr$name <- gsub("12-Dihydro-dexamethasone", "1,2-Dihydro-dexamethasone", data_degr$name)
-data_degr$name <- gsub("67-Dehydro-ethinylestradiol", "6,7-Dehydro-ethinylestradiol", data_degr$name)
-data_degr$name <- gsub('Dexamethasone-sodium-phosphate', 'Dexamethasone-phosphate', data_degr$name)
-
-# Add order of species and compounds
-compound_order <- c("Finasteride", "Altrenogest", "Cyproterone-acetate", "Chlormadinone-acetate", "Betamethasone-dipropionate", 
-                    "Beclomethasone-dipropionate", "Fludrocortisone-acetate", "Triamcinolone-acetonide", 
-                    "Dexamethasone-phosphate", "1,2-Dihydro-dexamethasone", "Flumethasone", "Triamcinolone",
-                    "Dexamethasone", "Betamethasone", "Exemestane", "Estrone", "6,7-Dehydro-ethinylestradiol",
-                    "17-Alpha-ethinylestradiol", "Inostral", "Testosterone", "Levonorgestrel", "Tibolone")
-
-species_order <- c("S.herbicidovorans", "C.testosteroni", "P.aeruginosa",  "R.erythropolis", 
-                   "control NB (pH4)", "control NB (pH7)", 
-                   "B.longum", "B.uniformis", "P.vulgatus", "E.faecalis", "L.reuteri" , "C.scindens", "E.rectale", "C.comes", 
-                   "control GMM (pH4)", "control GMM (pH7)")
-
-# Long data format
-data_degr_long <- data_degr %>% 
-  pivot_longer(cols = starts_with("mean_") | starts_with("sd_") | starts_with("degr_"),
-               names_to = c(".value", "time"),
-               names_pattern = "(mean|sd|degr)_(.*)") %>% 
-  mutate(condition = case_when(
-    condition == "pH4" & assay == "env" ~ "control NB (pH4)",
-    condition == "pH7" & assay == "env" ~ "control NB (pH7)",
-    condition == "pH4" & assay == "gut" ~ "control GMM (pH4)",
-    condition == "pH7" & assay == "gut" ~ "control GMM (pH7)",
-    TRUE ~ condition)) %>% 
-  mutate(time = as.numeric(time),
-         name = factor(name, levels = compound_order),
-         condition = factor(condition, levels = species_order)) %>% 
-  replace_na(list(degr = 0))
-
 #### METABOLITE DATA -----
 # Get list of curated metabolites
 metabolites <- read_csv(paste0(wd_path, "/Metabolites_collection/6_Metabolites_filtered_with_reactions_curated.csv")) %>% 
@@ -145,112 +111,63 @@ count_by_id <- function(df, desc, filter_expr, count_expr) {
 # Summary table 
 summary_table <- bind_rows(
   
-  # Unique metabolites (MZ–RT)
-  count_by_id(
-    metabolites,
-    "Unique metabolites (Unique MZ-RT)",
-    is.na(parent_match),
-    paste(consensus_MZ_RT)),
+  # Total biotransformation number
+    count_by_id(
+      metabolites,
+      "Total number of biotransfomrations",
+      is.na(parent_match),
+      paste(species, Compound, consensus_MZ_RT)),
   
   # Unique metabolites related to compound (Unique Compound–MZ–RT)
   count_by_id(
     metabolites,
-    "Unique metabolites related to compound (Unique Compound-MZ-RT)",
+    "Unique Compound-MZ-RT combinations",
     is.na(parent_match),
     paste(Compound, consensus_MZ_RT)),
   
-  # Unique parent compounds
+  # Unique metabolites (MZ–RT)
   count_by_id(
     metabolites,
-    "Parent compounds",
+    "Unique MZ-RT combinations",
+    is.na(parent_match),
+    paste(consensus_MZ_RT)),
+  
+  # Unique metabolites (MZ–RT)
+  count_by_id(
+    metabolites,
+    "Unique MZ-RT with COSMIC_STRUCTURE_SCORE >= 80",
+    is.na(parent_match) & COSMIC_STRUCTURE_SCORE >= 80,
+    paste(consensus_MZ_RT)),
+  
+  # Associated parent compounds
+  count_by_id(
+    metabolites,
+    "Associated parent compounds",
     is.na(parent_match),
     Compound),
   
-  # Unique species
+  # Associated species
   count_by_id(
     metabolites,
-    "Species",
+    "Associated species",
     is.na(parent_match),
     species),
   
-  # Compound–species combinations
+  # Unique compound–species combinations
   count_by_id(
     metabolites,
-    "Compound-species combinations",
+    "Unique compound-species combinations",
     is.na(parent_match),
-    paste(Compound, species)
-  ),
-  
-  # Assigned reactions (Compound–reaction)
-  count_by_id(
-    metabolites,
-    "Assigned reactions and their combinations (Compound-reaction)",
-    !is.na(reaction),
-    paste(Compound, reaction)
-  ),
+    paste(Compound, species)),
   
   # Compound-species combinations with assigned reactions
   count_by_id(
     metabolites,
-    "Compound-species combinations with assigned reactions",
+    "Unique compound-species combinations with assigned reactions",
     is.na(parent_match) & !is.na(reaction),
     paste(Compound, species)
   )
 )
-
-# Add confidently identified structures
-cosmic80_row <- tibble(
-  description = "Unique metabolites with COSMIC_STRUCTURE_SCORE >= 80",
-  MSMS = metabolites %>%
-    filter(is.na(parent_match), identified_by == "MSMS", COSMIC_STRUCTURE_SCORE >= 80) %>%
-    select(Compound, consensus_MZ_RT) %>%
-    nrow(),
-  
-  manual_curation = NA,
-  
-  total = metabolites %>%
-    filter(
-      is.na(parent_match),
-      identified_by == "MSMS",
-      COSMIC_STRUCTURE_SCORE >= 80) %>%
-    select(Compound, consensus_MZ_RT) %>%
-    nrow())
-
-summary_table <- bind_rows(summary_table, cosmic80_row)
-
-# Add total biotransformation number
-total <- tibble(
-  description = "Total biotransfomrations detected",
-  MSMS = metabolites %>%
-    filter(is.na(parent_match), identified_by == "MSMS") %>%
-    nrow(),
-  
-  manual_curation = metabolites %>%
-    filter(is.na(parent_match), identified_by == "manual_curation") %>%
-    nrow(),
-  
-  total = metabolites %>%
-    filter(is.na(parent_match), identified_by == "MSMS" | identified_by == "manual_curation") %>%
-    nrow())
-
-summary_table <- bind_rows(summary_table, total)
-
-# Add total biotransformation number with assigned reactions
-total_reactions <- tibble(
-  description = "Biotransfomrations with assigned reactions",
-  MSMS = metabolites %>%
-    filter(is.na(parent_match), !is.na(reaction), identified_by == "MSMS", ) %>%
-    nrow(),
-  
-  manual_curation = metabolites %>%
-    filter(is.na(parent_match), !is.na(reaction), identified_by == "manual_curation") %>%
-    nrow(),
-  
-  total = metabolites %>%
-    filter(is.na(parent_match), !is.na(reaction), identified_by == "MSMS" | identified_by == "manual_curation") %>%
-    nrow())
-
-summary_table <- bind_rows(summary_table, total_reactions)
 
 write_csv(summary_table, paste0(wd_path, "/Metabolites_collection/7_Summary_of_unique_metabolites.csv"))
 
@@ -349,6 +266,41 @@ ggsave(filename = paste0(wd_path, "/Metabolites_collection/7_Count_by_species.pd
        dpi = 300)
 
 #### PLOT METABOLITE MAP ----
+
+# Get parent data
+data_degr <- read_csv(paste0(dirname(wd_path), "/1_Targeted_analysis/Output/Steroid_degradation_statistics.csv"))
+data_degr$name <- gsub("12-Dihydro-dexamethasone", "1,2-Dihydro-dexamethasone", data_degr$name)
+data_degr$name <- gsub("67-Dehydro-ethinylestradiol", "6,7-Dehydro-ethinylestradiol", data_degr$name)
+data_degr$name <- gsub('Dexamethasone-sodium-phosphate', 'Dexamethasone-phosphate', data_degr$name)
+
+# Add order of species and compounds
+compound_order <- c("Finasteride", "Altrenogest", "Cyproterone-acetate", "Chlormadinone-acetate", "Betamethasone-dipropionate", 
+                    "Beclomethasone-dipropionate", "Fludrocortisone-acetate", "Triamcinolone-acetonide", 
+                    "Dexamethasone-phosphate", "1,2-Dihydro-dexamethasone", "Flumethasone", "Triamcinolone",
+                    "Dexamethasone", "Betamethasone", "Exemestane", "Estrone", "6,7-Dehydro-ethinylestradiol",
+                    "17-Alpha-ethinylestradiol", "Inostral", "Testosterone", "Levonorgestrel", "Tibolone")
+
+species_order <- c("S.herbicidovorans", "C.testosteroni", "P.aeruginosa",  "R.erythropolis", 
+                   "control NB (pH4)", "control NB (pH7)", 
+                   "B.longum", "B.uniformis", "P.vulgatus", "E.faecalis", "L.reuteri" , "C.scindens", "E.rectale", "C.comes", 
+                   "control GMM (pH4)", "control GMM (pH7)")
+
+# Long data format
+data_degr_long <- data_degr %>% 
+  pivot_longer(cols = starts_with("mean_") | starts_with("sd_") | starts_with("degr_"),
+               names_to = c(".value", "time"),
+               names_pattern = "(mean|sd|degr)_(.*)") %>% 
+  mutate(condition = case_when(
+    condition == "pH4" & assay == "env" ~ "control NB (pH4)",
+    condition == "pH7" & assay == "env" ~ "control NB (pH7)",
+    condition == "pH4" & assay == "gut" ~ "control GMM (pH4)",
+    condition == "pH7" & assay == "gut" ~ "control GMM (pH7)",
+    TRUE ~ condition)) %>% 
+  mutate(time = as.numeric(time),
+         name = factor(name, levels = compound_order),
+         condition = factor(condition, levels = species_order)) %>% 
+  replace_na(list(degr = 0))
+
 # Prepare and combine metabolite and parent data
 metabolites_df <- metabolites %>% 
   separate(reaction, into = c("reaction1", "reaction2", "reaction3"), sep = " & ") %>% 
@@ -481,13 +433,13 @@ draw(ht, heatmap_legend_side = "top", padding = unit(c(60, 20, 5, 10), "mm"))
 
 dev.off()
 
+
 #### S.herbicidovorans data for GoF ----
 sherbi <- metabolites %>%  
   filter(species == "S.herbicidovorans") %>% 
-  mutate(RT = RT + 0.1) %>% #for the ms method 
+  mutate(RT = RT + 0.1) %>% # for the ms method 
   mutate(metabolite = paste0(Compound, "_", MZ, "_", RT)) %>% 
   select(species, Compound, metabolite, MZ, RT) %>% 
   arrange(MZ) %>% 
   distinct() %>% 
   write_csv(paste0(wd_path, "/Metabolites_collection/7_GoF_metabolite_list_Sherbicidovorans.csv"))
-
