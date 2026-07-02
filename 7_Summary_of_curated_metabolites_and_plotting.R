@@ -112,11 +112,18 @@ count_by_id <- function(df, desc, filter_expr, count_expr) {
 summary_table <- bind_rows(
   
   # Total biotransformation number
-    count_by_id(
-      metabolites,
-      "Total number of biotransfomrations",
-      is.na(parent_match),
-      paste(species, Compound, consensus_MZ_RT)),
+  count_by_id(
+    metabolites,
+    "Total number of biotransfomrations",
+    is.na(parent_match),
+    paste(species, Compound, consensus_MZ_RT)),
+  
+  # Biotransformations with assigned reaction
+  count_by_id(
+    metabolites,
+    "Biotransformations with assigned reaction",
+    is.na(parent_match) & !is.na(reaction),
+    paste(species, Compound, consensus_MZ_RT)),
   
   # Unique metabolites related to compound (Unique Compound–MZ–RT)
   count_by_id(
