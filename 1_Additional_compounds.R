@@ -57,6 +57,8 @@ data_path <- paste0(wd_path, "/Input/")
 ### READ DATA ----
 data <- read.csv(paste0(data_path, 'Additional_compounds.csv')) 
 
+data %>% filter(!str_detect(metabolite, "parent")) %>% select(mz, rt) %>% distinct() %>% nrow() # Unique metabolites 
+
 ### CALCULATE PVALS ----
 data <- data %>% 
   mutate(time = as.factor(time),
