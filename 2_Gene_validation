@@ -1,0 +1,287 @@
+rm(list = ls())
+
+#### Import libraries ----
+library(ggplot2)
+library(tidyverse)
+library(ggrepel)
+library(viridis)
+library(scales) 
+
+#### THEME PUBLICATION ----
+scientific_10 <- function(x) {   
+  parse(text = gsub("e\\+*", " %*% 10^", scientific_format()(x)))}
+
+theme_Publication <- function(base_size=14, base_family="helvetica") {
+  library(grid)
+  library(ggthemes)
+  
+  (theme_foundation(base_size=base_size, base_family=base_family) +
+      theme(
+        # Plot title
+        plot.title = element_text(face = "bold", size = rel(1.2), hjust = 0.5),
+        text = element_text(),
+        
+        # Panel & plot backgrounds
+        panel.background = element_rect(colour = NA),
+        plot.background = element_rect(colour = NA),
+        panel.border = element_rect(colour = "black", fill = NA, size = 1),  # border around panel
+        
+        # Axis titles
+        axis.title = element_text(face = "bold", size = rel(1)),
+        axis.title.y = element_text(angle=90, vjust=2),
+        axis.title.x = element_text(vjust=-0.2),
+        
+        # Axis text & lines
+        axis.text = element_text(),
+        axis.line = element_line(colour="black"),
+        axis.ticks = element_line(),
+        
+        # Panel grids
+        panel.grid.major = element_line(colour="#f0f0f0"),
+        panel.grid.minor = element_blank(),
+        
+        # Axis lines for all sides
+        axis.line.x.bottom = element_line(color="black", size=1),
+        axis.line.x.top = element_line(color="black", size=1),
+        axis.line.y.left = element_line(color="black", size=1),
+        axis.line.y.right = element_line(color="black", size=1),
+        
+        # Legend settings
+        legend.key = element_rect(colour = NA),
+        legend.position = "bottom",
+        legend.direction = "horizontal",
+        legend.key.size= unit(1.3, "cm"),
+        legend.key.height = unit(0.4, "cm"),
+        legend.margin = unit(1, "cm"),
+        legend.title = element_blank(),
+        
+        # Margins and strip settings
+        plot.margin=unit(c(10,5,5,5),"mm"),
+        strip.background=element_rect(colour="#f0f0f0",fill="#f0f0f0"),
+        strip.text = element_text(face="bold")
+      )
+  )
+}
+
+#### SET WD ----
+
+# Set paths to working directory and data folders
+wd_path <- getwd()
+setwd(wd_path)
+data_path <- paste0(wd_path, "/Input/")
+
+#### BV98_003946 ----
+data <- read_csv(paste0(data_path, "BV98_003946.csv"))
+
+# Raw data used for points
+plot_data <- data %>%
+  mutate(condition = factor(
+    condition,
+    levels = c("E.coli_BV98_003946", "E.coli_empty_vector", "sterile control"))) %>%
+  filter(time == 16, condition != "E.coli_empty_vector", 
+         metabolite %in% c("Beclomethasone-propionate", "Betamethasone-propionate"))
+
+# Summary for bars
+summary_data <- plot_data %>%
+  group_by(name, metabolite, condition) %>%
+  summarise(
+    mean_area = mean(area, na.rm = TRUE),
+    sd_area = sd(area, na.rm = TRUE),
+    .groups = "drop")
+
+bar_cols <- c("E.coli_BV98_003946" = "#21918C", "sterile control" = "#21918C")
+pt_cols  <- c("E.coli_BV98_003946" = "#440154", "sterile control" = "#440154")
+
+ggplot(summary_data, aes(x = name, y = mean_area, fill = condition)) +
+  geom_col(position = position_dodge(width = 0.9), width = 0.8) +
+  geom_errorbar(aes(ymin = mean_area - sd_area, ymax = mean_area + sd_area), 
+                width = 0.2, 
+                linewidth = 0.7, 
+                position = position_dodge(width = 0.9)) +
+  geom_jitter(data = plot_data, aes(x = name, y = area, color = condition), 
+              position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.9),
+              size = 3, alpha = 0.8, inherit.aes = FALSE) +
+  scale_fill_manual(values = bar_cols, guide = "none") +
+  scale_colour_manual(values = pt_cols, guide = "none") +
+  scale_y_continuous(labels = scientific_10) +
+  labs(x = "Compound",
+       y = "Peak Area") +
+  theme_Publication() +
+  theme(
+    legend.position = "bottom",
+    axis.title.x = element_text(size = 24),
+    axis.title.y = element_text(size = 24),
+    axis.text.x = element_text(size = 14, angle = 30, hjust = 1),
+    axis.text.y = element_text(size = 14))
+
+ggsave(filename = paste0(wd_path, "/Plots/2_BV98_003946.pdf"),
+       width = 5,
+       height = 5,
+       unit = "in",
+       dpi = 200,
+       device = cairo_pdf)
+
+#### BV98_003246 ----
+data <- read_csv(paste0(data_path, "BV98_003246.csv"))
+
+# Raw data used for points
+plot_data <- data %>%
+  mutate(condition = factor(
+    condition,
+    levels = c("E.coli_BV98_003246", "E.coli_empty_vector", "sterile control"))) %>%
+  filter(time == 16, condition != "E.coli_empty_vector", 
+         metabolite %in% c("Cortisone _363.2163_2.3", "Prednisone_361.2006_2.3"))
+
+# Summary for bars
+summary_data <- plot_data %>%
+  group_by(name, metabolite, condition) %>%
+  summarise(
+    mean_area = mean(area, na.rm = TRUE),
+    sd_area = sd(area, na.rm = TRUE),
+    .groups = "drop")
+
+bar_cols <- c("E.coli_BV98_003246" = "#21918C", "sterile control" = "#21918C")
+pt_cols  <- c("E.coli_BV98_003246" = "#440154", "sterile control" = "#440154")
+
+ggplot(summary_data, aes(x = name, y = mean_area, fill = condition)) +
+  geom_col(position = position_dodge(width = 0.9), width = 0.8) +
+  geom_errorbar(aes(ymin = mean_area - sd_area, ymax = mean_area + sd_area), 
+                width = 0.2, 
+                linewidth = 0.7, 
+                position = position_dodge(width = 0.9)) +
+  geom_jitter(data = plot_data, aes(x = name, y = area, color = condition), 
+              position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.9),
+              size = 3, alpha = 0.8, inherit.aes = FALSE) +
+  scale_fill_manual(values = bar_cols, guide = "none") +
+  scale_colour_manual(values = pt_cols, guide = "none") +
+  scale_y_continuous(labels = scientific_10) +
+  labs(x = "Compound",
+       y = "Peak Area") +
+  theme_Publication() +
+  theme(
+    legend.position = "bottom",
+    axis.title.x = element_text(size = 24),
+    axis.title.y = element_text(size = 24),
+    axis.text.x = element_text(size = 14, angle = 30, hjust = 1),
+    axis.text.y = element_text(size = 14))
+
+ggsave(filename = paste0(wd_path, "/Plots/2_BV98_003246.pdf"),
+       width = 5,
+       height = 5,
+       unit = "in",
+       dpi = 200,
+       device = cairo_pdf)
+
+#### BV98_003248 ----
+data <- read_csv(paste0(data_path, "BV98_003248.csv"))
+
+# Raw data used for points
+plot_data <- data %>%
+  mutate(condition = factor(
+    condition,
+    levels = c("E.coli_BV98_003248", "E.coli_empty_vector", "sterile control"))) %>%
+  filter(time == 16, condition != "E.coli_empty_vector", 
+         metabolite %in% c("Testosterone_287.2006_3.04"))
+
+# Summary for bars
+summary_data <- plot_data %>%
+  group_by(name, metabolite, condition) %>%
+  summarise(
+    mean_area = mean(area, na.rm = TRUE),
+    sd_area = sd(area, na.rm = TRUE),
+    .groups = "drop")
+
+bar_cols <- c("E.coli_BV98_003248" = "#21918C", "sterile control" = "#21918C")
+pt_cols  <- c("E.coli_BV98_003248" = "#440154", "sterile control" = "#440154")
+
+ggplot(summary_data, aes(x = name, y = mean_area, fill = condition)) +
+  geom_col(position = position_dodge(width = 0.9), width = 0.8) +
+  geom_errorbar(aes(ymin = mean_area - sd_area, ymax = mean_area + sd_area), 
+                width = 0.2, 
+                linewidth = 0.7, 
+                position = position_dodge(width = 0.9)) +
+  geom_jitter(data = plot_data, aes(x = name, y = area, color = condition), 
+              position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.9),
+              size = 3, alpha = 0.8, inherit.aes = FALSE) +
+  scale_fill_manual(values = bar_cols, guide = "none") +
+  scale_colour_manual(values = pt_cols, guide = "none") +
+  scale_y_continuous(labels = scientific_10) +
+  labs(x = "Compound",
+       y = "Peak Area") +
+  theme_Publication() +
+  theme(
+    legend.position = "bottom",
+    axis.title.x = element_text(size = 24),
+    axis.title.y = element_text(size = 24),
+    axis.text.x = element_text(size = 14, angle = 30, hjust = 1),
+    axis.text.y = element_text(size = 14))
+
+ggsave(filename = paste0(wd_path, "/Plots/2_BV98_003248.pdf"),
+       width = 4,
+       height = 5,
+       unit = "in",
+       dpi = 200,
+       device = cairo_pdf)
+
+#### BV98_003246 ----
+data <- read_csv(paste0(data_path, "BV98_003899.csv"))
+
+# Raw data used for points
+plot_data <- data %>%
+  mutate(condition = factor(
+    condition,
+    levels = c("E.coli_BV98_003899", "E.coli_empty_vector", "sterile control"))) %>%
+  filter(time == 16, condition != "E.coli_empty_vector", 
+         metabolite_type == "17-ketone")
+
+# Summary for bars
+summary_data <- plot_data %>%
+  group_by(name, metabolite, condition) %>%
+  summarise(
+    mean_area = mean(area, na.rm = TRUE),
+    sd_area = sd(area, na.rm = TRUE),
+    .groups = "drop")
+
+summary_data$name <- factor(
+  summary_data$name,
+  levels = c(
+    "Fludrocortisone",
+    "Hydrocortisone",
+    "Cortisone",
+    "Prednisolone",
+    "Methylprednisolone",
+    "Prednisone",
+    "Corticosterone",
+    "12-Didehydrocorticosterone"))
+
+bar_cols <- c("E.coli_BV98_003899" = "#21918C", "sterile control" = "#21918C")
+pt_cols  <- c("E.coli_BV98_003899" = "#440154", "sterile control" = "#440154")
+
+ggplot(summary_data, aes(x = name, y = mean_area, fill = condition)) +
+  geom_col(position = position_dodge(width = 0.9), width = 0.8) +
+  geom_errorbar(aes(ymin = mean_area - sd_area, ymax = mean_area + sd_area), 
+                width = 0.2, 
+                linewidth = 0.7, 
+                position = position_dodge(width = 0.9)) +
+  geom_jitter(data = plot_data, aes(x = name, y = area, color = condition), 
+              position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.9),
+              size = 3, alpha = 0.8, inherit.aes = FALSE) +
+  scale_fill_manual(values = bar_cols, guide = "none") +
+  scale_colour_manual(values = pt_cols, guide = "none") +
+  scale_y_continuous(labels = scientific_10) +
+  labs(x = "Compound",
+       y = "Peak Area") +
+  theme_Publication() +
+  theme(
+    legend.position = "bottom",
+    axis.title.x = element_text(size = 24),
+    axis.title.y = element_text(size = 24),
+    axis.text.x = element_text(size = 14, angle = 30, hjust = 1),
+    axis.text.y = element_text(size = 14))
+
+ggsave(filename = paste0(wd_path, "/Plots/2_BV98_003899.pdf"),
+       width = 15,
+       height = 5,
+       unit = "in",
+       dpi = 200,
+       device = cairo_pdf)
