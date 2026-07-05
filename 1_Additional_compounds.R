@@ -55,9 +55,7 @@ setwd(wd_path)
 data_path <- paste0(wd_path, "/Input/")
 
 ### READ DATA ----
-data <- read.csv(paste0(data_path, 'Additional_compounds.csv')) 
-
-data %>% filter(!str_detect(metabolite, "parent")) %>% select(mz, rt) %>% distinct() %>% nrow() # Unique metabolites 
+data <- read.csv(paste0(data_path, 'Additional_compounds.csv'))
 
 ### CALCULATE PVALS ----
 data <- data %>% 
@@ -114,7 +112,8 @@ data_long <- data_stats %>%
   mutate(condition = factor(condition, levels = c("S.herbicidovorans", "ctrl"))) %>%
   mutate(time = as.numeric(as.character(time))) %>% 
   group_by(name, metabolite, mz, rt, condition, time, reaction, pval, padj) %>%
-  summarise(mean_area = mean(area), sd = sd(area), .groups = "drop") %>% 
+  summarise(mean_area = mean(area), sd = sd(area), .groups = "drop") %>%
+  select(name, metabolite, condition,	time,	reaction,	mean_area,	sd,	pval,	padj) %>% 
   write_csv(paste0(wd_path, '/Output/1_Additional_compounds_analysis.csv')) 
 
 metabolites <- data_long %>% 
@@ -263,8 +262,8 @@ ggsave(parents_plot,
 
 ### PLOT SIDE-CHAIN CLEAVED METABOLITES ----
 sidechain <- data_long %>%
-  filter(metabolite != "Corticosterone_303.1955_2.6") %>% # Select metabolite with higher intensity
-  filter(metabolite != "Fludrocortisone_321.1861_2.58") %>% # Select metabolite with higher intensity
+  filter(metabolite != "Corticosterone_303.1955_2.6") %>% # Keep same product as hydrocortisone-17-ketone
+  filter(metabolite != "Fludrocortisone_321.1861_2.58") %>% # Keep metabolite with higher intensity and passing RT
   filter(!name %in% c("12-Didehydrocorticosterone", "Fludrocortisone-acetate", "Prednisolone", "Dihydrocortisol")) %>% # Select compounds no keto metabolite
   filter(reaction %in% c(
     "parent",
@@ -446,27 +445,22 @@ plot %>%
 
 ggsave(filename = paste0(wd_path, "/Plots/1_Hydrocortisone_SI.pdf"),
        width = 15,
-       height = 2.8,
+       height = 5,
        units = "in",
        dpi = 300,
        device = cairo_pdf)
 
 ### CORTICOSTERONE ----
 plot <- data_long %>%
-  filter(name == "Corticosterone") 
-  # filter(metabolite %in% c(
-  #   "Corticosterone-parent_347.2217_2.85",
-  #   "Corticosterone_303.1955_2.8",
-  #   "Corticosterone_363.2166_2.93"
-  # )) %>%
-  # mutate(
-  #   metabolite = factor(
-  #     metabolite,
-  #     levels = c(
-  #       "Corticosterone-parent_347.2217_2.85",
-  #       "Corticosterone_363.2166_2.93",
-  #       "Corticosterone_303.1955_2.8"))) %>% 
-  # filter(time <= 8)
+  filter(name == "Corticosterone") %>% 
+filter(metabolite %in% c("Corticosterone-parent_347.2217_2.85",
+                         "Corticosterone_303.1955_2.8",
+                         "Corticosterone_363.2166_2.93")) %>%
+  mutate(metabolite = factor(metabolite, 
+                             levels = c( "Corticosterone-parent_347.2217_2.85",
+                                         "Corticosterone_363.2166_2.93",
+                                         "Corticosterone_303.1955_2.8"))) %>%
+  filter(time <= 8)
 
 plot %>%
   ggplot(aes(
@@ -489,7 +483,7 @@ plot %>%
   scale_linetype_manual(values = c(
     "S.herbicidovorans" = "solid",
     "ctrl" = "dotted")) +
-  facet_wrap(~ metabolite, scales = "free_y", ncol = 4) +
+  facet_wrap(~ metabolite, scales = "free_y", ncol = 1) +
   scale_x_continuous(labels = label_number(1)) +
   scale_y_continuous(labels = scientific_10) +
   coord_cartesian(ylim = c(0, NA)) +
@@ -507,8 +501,8 @@ plot %>%
       linewidth = 1.5))
 
 ggsave(filename = paste0(wd_path, "/Plots/1_Corticosterone_SI.pdf"),
-       width = 15,
-       height = 6,
+       width = 5,
+       height = 7,
        units = "in",
        dpi = 300,
        device = cairo_pdf)
