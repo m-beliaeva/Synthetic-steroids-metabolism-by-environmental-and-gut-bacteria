@@ -216,7 +216,7 @@ metabolite_counts$Compound <- factor(metabolite_counts$Compound, levels = compou
 plot <- metabolite_counts %>%
   ggplot(aes(x = Compound, y = unique_metabolites, fill = reaction_status)) +
   geom_bar(stat = "identity", color = "black", linewidth = 0.5) +
-  scale_fill_viridis_d(option = "D") +
+  scale_fill_viridis_d(option = "D", end = 0.85) +
   theme_minimal(base_size = 14) +
   labs(x = "Compound",
        y = "# of unique metabolites",
@@ -263,7 +263,7 @@ metabolite_counts$species <- factor(metabolite_counts$species, levels = species_
 plot <- metabolite_counts %>%
   ggplot(aes(x = species, y = unique_metabolites, fill = reaction_status)) +
   geom_bar(stat = "identity", color = "black", linewidth = 0.5) +
-  scale_fill_viridis_d(option = "D") +
+  scale_fill_viridis_d(option = "D", end = 0.85) +
   theme_minimal(base_size = 14) +
   labs(x = "Species",
        y = "# of unique metabolites",
