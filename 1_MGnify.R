@@ -24,7 +24,7 @@ setwd(wd_path)
 data_path <- paste0(wd_path, "/Input/")
 
 #### Extract IDs ----
-thr = 1e-10
+thr = 1e-6
 
 id_A0A086P4J8 <- read_csv(paste0(data_path, "A0A086P4J8.csv")) 
 
