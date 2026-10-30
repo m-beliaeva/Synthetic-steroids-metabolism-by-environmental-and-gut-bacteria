@@ -19,18 +19,19 @@ setwd(wd_path)
 
 #### METABOLITE DATA -----
 # Get list of curated metabolites
-metabolites <- read_csv(paste0(wd_path, "/Metabolites_collection/6_Metabolites_filtered_with_reactions_curated.csv")) %>% 
-  filter(is.na(parent_match)) %>% 
-  filter(metabolite_type != "in-source defluorination") # 167 curated biotransformations detected excluding parent hits
+metabolites <- read_csv(paste0(wd_path, "/Metabolites_collection/6_Metabolites_filtered_with_reactions_curated_upd.csv")) %>% 
+  mutate(parent_match = NA) # 166 curated biotransformations detected excluding parent hits
 
-metabolites$Compound <- gsub("12-Dihydro-dexamethasone", "1,2-Dihydro-dexamethasone", metabolites$Compound)
-metabolites$Compound <- gsub("67-Dehydro-ethinylestradiol", "6,7-Dehydro-ethinylestradiol", metabolites$Compound)
-metabolites$Compound <- gsub("67-Dehydro-ethynylestradiol", "6,7-Dehydro-ethinylestradiol", metabolites$Compound)
+metabolites$Compound <- gsub("^1,?2-Dihydro-?dexamethasone$",
+                             "1,2-Dihydro-dexamethasone", metabolites$Compound)
+metabolites$Compound <- gsub("^6,?7-Dehydro-?eth[iy]nylestradiol$",
+                             "6,7-Dehydro-ethinylestradiol", metabolites$Compound)
 
 # Tolerance for MZ_RT consensus
 abs_mass = 0.001 # absolute mz tolerance
-rel_mass = 2*10^-6 # relative mz tolerance (20 ppm)
-abs_rt = 0.1 # absolute rt tolerance
+rel_mass = 20*10^-6 # relative mz tolerance (20 ppm)
+# allows for between-runs shift; however, merges some isomers (to be fixed manually)
+abs_rt = 0.12 # absolute rt tolerance
 
 # Cluster metabolites based on MZ_RT combinations by tolerance
 metabolites_clustered <- metabolites %>%
@@ -67,6 +68,40 @@ for (i in 2:nrow(metabolites_clustered)) {
   }
 }
 
+# --- manual correction of clusters that merge distinct compounds ----------
+# Three m/z windows chain across the RT tolerance and merge compounds that
+# are chromatographically distinct: the 17-ketone epimers (m/z 333.19,
+# dexamethasone- vs betamethasone-17-ketone) and the monopropionate
+# positional isomers (m/z 449.23 and m/z 465.20). Rows in these windows are
+# re-assigned to a sub-cluster by the curated compound name rather than by
+# retention time, because between-run RT drift is larger than the separation
+# between the two isomers.
+
+manual_splits <- tibble::tribble(
+  ~mz_low,  ~mz_high, ~label,
+  333.180,  333.190,  "m333_17ketone",
+  449.225,  449.240,  "m449_monopropionate",
+  465.195,  465.210,  "m465_monopropionate")
+
+metabolites_clustered <- metabolites_clustered %>%
+  mutate(cluster_id = as.character(cluster_id))
+
+for (i in seq_len(nrow(manual_splits))) {
+  s   <- manual_splits[i, ]
+  hit <- metabolites_clustered$MZ >= s$mz_low &
+    metabolites_clustered$MZ <= s$mz_high
+  # every row in these windows must carry a curated name
+  stopifnot(all(!is.na(metabolites_clustered$METABOLITE_PROPOSED[hit]) &
+                  nzchar(trimws(metabolites_clustered$METABOLITE_PROPOSED[hit]))))
+  metabolites_clustered$cluster_id[hit] <- paste0(
+    s$label, "_", trimws(metabolites_clustered$METABOLITE_PROPOSED[hit]))
+}
+
+# how many rows each manual window captured, as a check
+metabolites_clustered %>%
+  filter(str_starts(cluster_id, "m333|m449|m465")) %>%
+  count(cluster_id)
+
 cluster_consensus <- metabolites_clustered %>%
   group_by(cluster_id) %>%
   summarise(
@@ -77,12 +112,14 @@ cluster_consensus <- metabolites_clustered %>%
 metabolites <- metabolites_clustered %>%
   left_join(cluster_consensus, by = "cluster_id") %>%
   mutate(
-    consensus_MZ_RT = paste0(
-      round(consensus_MZ, 4), "_",
-      round(consensus_RT, 1)
-    )
-  ) %>% 
-  select(-consensus_MZ, -consensus_RT, -cluster_id)
+    consensus_MZ_RT = paste0(round(consensus_MZ, 4), "_", round(consensus_RT, 1))
+  ) %>%
+  write_csv(paste0(wd_path,
+                   "/Metabolites_collection/6_Metabolites_filtered_with_reactions_curated_upd_clustered.csv")) %>%
+  select(-consensus_MZ, -consensus_RT)   
+
+stopifnot(n_distinct(metabolites$cluster_id) ==
+            n_distinct(metabolites$consensus_MZ_RT))
 
 ##### Count metabolites ----
 # Funtion to count
@@ -124,7 +161,7 @@ summary_table <- bind_rows(
     "Biotransformations with assigned reaction",
     is.na(parent_match) & !is.na(reaction),
     paste(species, Compound, consensus_MZ_RT)),
-
+  
   # Biotransformations with initial metabolites
   count_by_id(
     metabolites,
@@ -137,6 +174,13 @@ summary_table <- bind_rows(
     metabolites,
     "Biotransformations with intermediate metabolites",
     is.na(parent_match) & str_detect(metabolite_type, "intermediate"),
+    paste(species, Compound, consensus_MZ_RT)),
+  
+  # Biotransformations with accumulated metabolites
+  count_by_id(
+    metabolites,
+    "Biotransformations with accumulated metabolites",
+    is.na(parent_match) & str_detect(metabolite_type, "accumulated"),
     paste(species, Compound, consensus_MZ_RT)),
   
   # Unique metabolites related to compound (Unique Compound–MZ–RT)
@@ -190,7 +234,50 @@ summary_table <- bind_rows(
   )
 )
 
-write_csv(summary_table, paste0(wd_path, "/Metabolites_collection/7_Summary_of_unique_metabolites.csv"))
+# Add annotations count
+level_order <- c("1", "2b", "3", "5")
+
+metabolites_best <- metabolites %>%
+  filter(is.na(parent_match)) %>%
+  mutate(level_rank = match(ANNOTATION_LEVEL, level_order)) %>%
+  group_by(cluster_id) %>%
+  mutate(best_level = level_order[min(level_rank, na.rm = TRUE)]) %>%
+  ungroup()
+
+stopifnot(n_distinct(metabolites$cluster_id) ==
+            n_distinct(metabolites$consensus_MZ_RT))
+
+# per biotransformation (species x compound x feature): no ambiguity
+level_rows <- map(level_order, function(lv) {
+  count_by_id(
+    metabolites,
+    paste0("Biotransformations at annotation level ", lv),
+    is.na(parent_match) & ANNOTATION_LEVEL == lv,
+    paste(species, Compound, consensus_MZ_RT))
+})
+
+# per unique metabolite (MZ-RT): assign each feature its best level first
+metabolites_best <- metabolites %>%
+  filter(is.na(parent_match)) %>%
+  mutate(level_rank = match(ANNOTATION_LEVEL, level_order)) %>%
+  group_by(consensus_MZ_RT) %>%
+  mutate(best_level = level_order[min(level_rank, na.rm = TRUE)]) %>%
+  ungroup()
+
+level_rows_unique <- map(level_order, function(lv) {
+  count_by_id(
+    metabolites_best,
+    paste0("Unique MZ-RT at annotation level ", lv),
+    best_level == lv,
+    paste(consensus_MZ_RT))
+})
+
+summary_table <- bind_rows(
+  summary_table,
+  bind_rows(level_rows),
+  bind_rows(level_rows_unique))
+
+write_csv(summary_table, paste0(wd_path, "/Metabolites_collection/7_Summary_of_unique_metabolites_upd.csv"))
 
 #### BARPLOT METABOLITES PER STEROID ----
 df_plot <- metabolites %>%
@@ -200,7 +287,7 @@ df_plot <- metabolites %>%
 # Count unique metabolites per Compound and reaction status
 metabolite_counts <- df_plot %>%
   group_by(Compound, reaction_status = ifelse(is.na(reaction), "No", "Yes")) %>%
-  summarise(unique_metabolites = n_distinct(MetaboliteID), .groups = "drop")%>% 
+  summarise(unique_metabolites = n_distinct(MetaboliteID), .groups = "drop") %>% 
   write_csv(paste0(wd_path, "/Metabolites_collection/7_Unique_metabolites_per_steroid.csv"))
 
 # Add order
@@ -327,8 +414,9 @@ metabolites_df <- metabolites %>%
   separate(reaction, into = c("reaction1", "reaction2", "reaction3"), sep = " & ") %>% 
   pivot_longer(cols = c("reaction1", "reaction2", "reaction3"), values_to = "reaction") %>% 
   select(-c(name, SMILES_PARENT, FORMULA_PARENT, MZ_PARENT, RT_PARENT, MZ, RT, delta_mass, atomic_difference, 
-            SIRIUS_FORMULA, SIRIUS_FORMULA_SCORE, CSIFingerID_STRUCTURE, COSMIC_STRUCTURE_SCORE, METABOLITE,
-            identified_by, metabolite_type, SIRIUS_PARAMETERS, parent_match, SIRIUS_VERSION, consensus_MZ_RT)) %>% 
+            SIRIUS_FORMULA, SIRIUS_FORMULA_SCORE, CSIFingerID_STRUCTURE, COSMIC_STRUCTURE_SCORE, METABOLITE_PROPOSED,
+            identified_by, Metabolite, ANNOTATION_LEVEL, LEVEL_EVIDENCE, metabolite_type, SIRIUS_PARAMETERS, 
+            parent_match, consensus_MZ_RT, cluster_id)) %>% 
   distinct() %>% 
   drop_na(reaction)
 
@@ -453,7 +541,6 @@ ht <- Heatmap(as.matrix(heatmap),
 draw(ht, heatmap_legend_side = "top", padding = unit(c(60, 20, 5, 10), "mm"))
 
 dev.off()
-
 
 #### S.herbicidovorans data for GoF ----
 sherbi <- metabolites %>%  
