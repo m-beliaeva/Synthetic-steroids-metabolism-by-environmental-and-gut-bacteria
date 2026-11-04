@@ -30,7 +30,7 @@ metabolites$Compound <- gsub("^6,?7-Dehydro-?eth[iy]nylestradiol$",
 # Tolerance for MZ_RT consensus
 abs_mass = 0.001 # absolute mz tolerance
 rel_mass = 20*10^-6 # relative mz tolerance (20 ppm)
-# allows for between-runs shift; however, merges some isomers (to be fixed manually)
+# allows for between-runs shift, however, merges some isomers (to be fixed manually)
 abs_rt = 0.12 # absolute rt tolerance
 
 # Cluster metabolites based on MZ_RT combinations by tolerance
@@ -80,6 +80,7 @@ for (i in 2:nrow(metabolites_clustered)) {
 manual_splits <- tibble::tribble(
   ~mz_low,  ~mz_high, ~label,
   333.180,  333.190,  "m333_17ketone",
+  393.200,  393.210,  "m393_parent",
   449.225,  449.240,  "m449_monopropionate",
   465.195,  465.210,  "m465_monopropionate")
 
@@ -99,7 +100,7 @@ for (i in seq_len(nrow(manual_splits))) {
 
 # how many rows each manual window captured, as a check
 metabolites_clustered %>%
-  filter(str_starts(cluster_id, "m333|m449|m465")) %>%
+  filter(str_starts(cluster_id, "m333|m393|m449|m465")) %>%
   count(cluster_id)
 
 cluster_consensus <- metabolites_clustered %>%
@@ -551,3 +552,4 @@ sherbi <- metabolites %>%
   arrange(MZ) %>% 
   distinct() %>% 
   write_csv(paste0(wd_path, "/Metabolites_collection/7_GoF_metabolite_list_Sherbicidovorans.csv"))
+
