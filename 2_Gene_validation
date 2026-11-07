@@ -223,7 +223,7 @@ ggsave(filename = paste0(wd_path, "/Plots/2_BV98_003248.pdf"),
        dpi = 200,
        device = cairo_pdf)
 
-#### BV98_003246 ----
+#### BV98_003899 ----
 data <- read_csv(paste0(data_path, "BV98_003899.csv"))
 
 # Raw data used for points
@@ -281,6 +281,57 @@ ggplot(summary_data, aes(x = name, y = mean_area, fill = condition)) +
 
 ggsave(filename = paste0(wd_path, "/Plots/2_BV98_003899.pdf"),
        width = 15,
+       height = 5,
+       unit = "in",
+       dpi = 200,
+       device = cairo_pdf)
+
+#### BV98_003899 oxidation ----
+data <- read_csv(paste0(data_path, "BV98_003899_oxidation.csv"))
+
+# Raw data used for points
+plot_data <- data %>%
+  mutate(condition = factor(
+    condition,
+    levels = c("E.coli_BV98_003899", "E.coli_empty_vector", "sterile control"))) %>%
+  filter(time == 16, condition != "E.coli_empty_vector", 
+         metabolite_type != "parent")
+
+# Summary for bars
+summary_data <- plot_data %>%
+  group_by(name, metabolite, condition) %>%
+  summarise(
+    mean_area = mean(area, na.rm = TRUE),
+    sd_area = sd(area, na.rm = TRUE),
+    .groups = "drop")
+
+bar_cols <- c("E.coli_BV98_003899" = "#21918C", "sterile control" = "#21918C")
+pt_cols  <- c("E.coli_BV98_003899" = "#440154", "sterile control" = "#440154")
+
+ggplot(summary_data, aes(x = name, y = mean_area, fill = condition)) +
+  geom_col(position = position_dodge(width = 0.9), width = 0.8) +
+  geom_errorbar(aes(ymin = mean_area - sd_area, ymax = mean_area + sd_area), 
+                width = 0.2, 
+                linewidth = 0.7, 
+                position = position_dodge(width = 0.9)) +
+  geom_jitter(data = plot_data, aes(x = name, y = area, color = condition), 
+              position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.9),
+              size = 3, alpha = 0.8, inherit.aes = FALSE) +
+  scale_fill_manual(values = bar_cols, guide = "none") +
+  scale_colour_manual(values = pt_cols, guide = "none") +
+  scale_y_continuous(labels = scientific_10) +
+  labs(x = "Compound",
+       y = "Peak Area") +
+  theme_Publication() +
+  theme(
+    legend.position = "bottom",
+    axis.title.x = element_text(size = 24),
+    axis.title.y = element_text(size = 24),
+    axis.text.x = element_text(size = 14, angle = 30, hjust = 1),
+    axis.text.y = element_text(size = 14))
+
+ggsave(filename = paste0(wd_path, "/Plots/2_BV98_003899_oxidation.pdf"),
+       width = 5,
        height = 5,
        unit = "in",
        dpi = 200,
